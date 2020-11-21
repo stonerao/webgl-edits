@@ -14,6 +14,8 @@ class HandleEffect extends EffectBase {
 
         this.rayArr = []; // 拾取数组
 
+        this.planeArr = [];
+
         this.init();
 
         /*  this.setBackground({
@@ -42,8 +44,8 @@ class HandleEffect extends EffectBase {
                 color: 0x9CB8A7,
                 // depthWrite: false,
                 // depthTest: false,
-           /*      transparent: true,
-                opacity: 0.6 */
+                /*      transparent: true,
+                     opacity: 0.6 */
             })
         );
         this.helpLine.renderOrder = 5;
@@ -95,13 +97,17 @@ class HandleEffect extends EffectBase {
     updateLine() {
         const { lines, pointImg } = StateManage.state;
 
+        const ImgsType = [101];
         this.createLineGroup();
         this.Flys.array = [];
         for (let i = 0; i < lines.length; i++) {
             const elem = lines[i];
             const { options, data, uuid } = elem;
-            const material = this.lineHelpMaterial.clone();
-            const geometry = new THREE.BufferGeometry();
+            const { img, speed, size, dpi, length, type, color } = options;
+
+            let _pimg = null;
+            if (pointImg) _pimg = pointImg;
+            if (img) _pimg = img;
 
             let _data = data.map((d) => new THREE.Vector3(d.x, d.y, d.z));
 
@@ -111,42 +117,75 @@ class HandleEffect extends EffectBase {
                 _data = curve.getPoints(_data.length * 10);
             }
 
-            geometry.setFromPoints(_data);
+            if (ImgsType.includes(type)) {
+                const map = new THREE.TextureLoader().load(_pimg);
+                var geometry = new THREE.PlaneGeometry(size, size);
+                var material = new THREE.MeshBasicMaterial({
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    color: new THREE.Color(color),
+                    map: map
+                });
+                var plane = new THREE.Mesh(geometry, material);
+                plane.renderOrder = 10;
+                plane._type = "plane";
+                plane._speed = speed;
 
-            const line = new THREE.Line(geometry, material);
-
-            line.name = uuid;
-            line.renderOrder = 5;
-            line.position.y = 1;
-            // 点 
-
-            this.linesGroup.add(line);
-
-            const { img, speed, size, dpi, length, type, color } = options;
-            let _pimg = null;
-            if (pointImg) _pimg = pointImg;
-            if (img) _pimg = img;
-            const flyMesh = this.Flys.add({
-                img: _pimg,
-                data: _data,
-                speed,
-                size,
-                dpi,
-                length,
-                type,
-                color: new THREE.Color(color),
-                repeat: Infinity,
-                material: {
-                    depthWrite: false,
-                    blending: 2
-                },
-                onComplete: function () {
-                },
-                onRepeat(val) {
+                const totals = [];
+                totals[0] = 0;
+                for (let j = 1; j < _data.length; j++) {
+                    totals[j] = _data[j - 1].distanceTo(_data[j]);
                 }
-            });
-            flyMesh.name = elem.uuid;
-            this.flyGroup.add(flyMesh);
+
+                plane._data = _data;
+                plane._totals = totals;
+                plane._time = 0;
+                plane._index = 0;
+
+                plane.position.set(_data[0].x, _data[0].y, 1)
+                // plane.position.y = 1;
+
+                this.planeArr.push(plane);
+                this.flyGroup.add(plane);
+
+            } else {
+                const material = this.lineHelpMaterial.clone();
+                const geometry = new THREE.BufferGeometry();
+
+                geometry.setFromPoints(_data);
+
+                const line = new THREE.Line(geometry, material);
+
+                line.name = uuid;
+                line.renderOrder = 5;
+                line.position.y = 1;
+                // 点 
+
+                this.linesGroup.add(line);
+
+
+                const flyMesh = this.Flys.add({
+                    img: _pimg,
+                    data: _data,
+                    speed,
+                    size,
+                    dpi,
+                    length,
+                    type,
+                    color: new THREE.Color(color),
+                    repeat: Infinity,
+                    material: {
+                        depthWrite: false,
+                        blending: 2
+                    },
+                    onComplete: function () {
+                    },
+                    onRepeat(val) {
+                    }
+                });
+                flyMesh.name = elem.uuid;
+                this.flyGroup.add(flyMesh);
+            }
         }
     }
 
@@ -181,6 +220,7 @@ class HandleEffect extends EffectBase {
 
     createLineGroup() {
         // 存储展示线条 
+        this.planeArr = [];
         this.linesGroup && this.config.renderers.disposeObj(this.linesGroup);
         this.flyGroup && this.config.renderers.disposeObj(this.flyGroup);
 
@@ -262,5 +302,11 @@ class HandleEffect extends EffectBase {
     }
     animate = (dt) => {
         this.Flys.animation(dt);
+        this.planeArr.forEach((elem) => {
+            elem._time += dt;
+            
+            const curr = elem._time
+
+        })
     }
 }

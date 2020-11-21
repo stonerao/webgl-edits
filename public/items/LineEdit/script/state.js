@@ -7,7 +7,7 @@ const StateManage = {
         editType: 0,
         isKeyCtrl: false, //是否按下ctrl
         lines: [],
-        pointImg: null, // 粒子默认材质
+        pointImg: "./images/point.png", // 粒子默认材质
         flyOpts: {
             curve: false,
             speed: 3, // 速度
