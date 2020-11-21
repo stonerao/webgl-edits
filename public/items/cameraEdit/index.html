@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>相机、点位编辑器</title>
+
+    <script src="../../libs/jquery.js"></script>
+    <script src="../../libs/WebGL.js"></script>
+    <script src="../../libs/vue.min.js"></script>
+    <script src="../../libs/element.js"></script>
+    <script src="../../libs/three_r98.js"></script>
+    <script src="../../libs/OrbitControls.js"></script>
+    <script src="../../libs/FBXLoader.js"></script>
+    <script src="../../libs/DragControls.js"></script>
+    <script src="../../libs/TransformControls.js"></script>
+    <script src="../../libs/dat.gui.min.js"></script>
+    <script src="../../libs/stats.min.js"></script>
+    <script src="../../libs/tween.js"></script>
+    <script src="./libs/perfect-scrollbar.min.js"></script>
+    <script src="./libs/libs_little.js"></script>
+
+    <script src="js/src/EffectEvents.js"></script>
+    <script src="js/src/EffectRender.js"></script>
+    <script src="js/src/EffectBase.js"></script>
+
+    <script src="js/src/handelModel.js"></script>
+    <script src="js/src/handelCamera.js"></script>
+    <script src="js/src/handelPointy.js"></script>
+
+    <link rel="stylesheet" href="../../libs/element.css">
+    <link rel="stylesheet" href="./style/reset.css">
+    <link rel="stylesheet" href="./style/perfect-scrollbar.css">
+    <link rel="stylesheet" href="./style/index.css">
+</head>
+
+<body>
+    <div class="full" id="app">
+        <div class="head">
+            <div class="head-list">
+                <div class="head-items">
+                    <span class="list-name" @click="exportEvent">导出</span>
+                    <span class="list-name" @click="importShow = true">导入</span>
+                    <span class="list-name"><label for="exportModel">添加模型</label></span>
+                    <input type="file" accept=".fbx" @change="exportModel" id="exportModel" hidden>
+                </div>
+            </div>
+        </div>
+        <!-- 显示区域 -->
+        <div class="left">
+            <div class="full" id="webgl">
+
+            </div>
+            <div class="edit-ben" v-if="modelId == 0">
+                <el-button size="mini" @click="cameraAdd">添加</el-button>
+                <el-button size="mini" @click="cameraReplay">回放</el-button>
+
+                <el-button size="mini" @click="cameraSave" v-if="!isEdit">存储</el-button>
+                <el-button size="mini" @click="cameraEdit" v-else>修改</el-button>
+                <!-- <el-button size="mini" @click="cameraEdit">显示</el-button> -->
+            </div>
+        </div>
+        <!-- 控制区域 -->
+        <div class="right">
+            <!-- 控制区域 -->
+            <div class="t-model">
+                <c-scroll>
+                    <template v-slot:main>
+                        <div>
+                            <!-- 相机 -->
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">相机</div>
+                                <div class="t-item-box">
+                                    <div>
+                                        <el-select v-model="cameraVal" placeholder="选择相机" size="mini">
+                                            <el-option v-for="item in cameraOpts" :key="item.id" :label="item.name"
+                                                :value="item.id">
+                                            </el-option>
+                                        </el-select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 场景 -->
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">速度</div>
+                                <div class="t-item-box">
+                                    <div>
+                                        <el-input size="mini" v-model="speed" placeholder="请输入速度"></el-input>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 场景 -->
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">模式</div>
+                                <div class="t-item-box">
+                                    <div>
+                                        <!-- <el-input size="mini" v-model="speed" placeholder="请输入速度"></el-input> -->
+                                        <el-select size="mini" v-model="modelId" placeholder="请选择">
+                                            <el-option v-for="item in models" :key="item.id" :label="item.name"
+                                                :value="item.id">
+                                            </el-option>
+                                        </el-select>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- 场景 -->
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">场景偏移</div>
+                                <div class="t-item-box">
+                                    <div class="t-item-inputs">
+                                        <el-input size="mini" v-model="scenePosition.x" placeholder="偏移X"></el-input>
+                                        <el-input size="mini" v-model="scenePosition.y" placeholder="偏移Y"></el-input>
+                                        <el-input size="mini" v-model="scenePosition.z" placeholder="偏移Z"></el-input>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </c-scroll>
+            </div>
+            <!-- 图层 -->
+            <div class="t-shows">
+                <c-scroll>
+                    <template v-slot:main>
+                        <div>
+                            <ul class="layer-items">
+                                <li v-for="(item, index) in layers" :key="item.uuid" class="layer-item">
+                                    <div class="layer-uuid">
+                                        <span @click="selectPoint(item)" v-if="editNameUuid!=item.uuid" @dblclick="setItemName(item)">{{item.name}}</span>
+                                        <span v-if="editNameUuid==item.uuid">
+                                            <el-input @change="editNameUuid=null"  @blur="editNameUuid=false" size="mini"  style="width:120px" v-model="item.name" placeholder="修改name"></el-input>
+                                        </span>
+                                        ({{item.type}})
+                                    </div>
+                                    <div class="layer-btn">
+                                        <el-button size="mini" @click="editItem(item)">修改</el-button>
+                                        <el-button size="mini" @click="delItem(index)">删除</el-button>
+                                    </div>
+
+                                </li>
+                            </ul>
+                        </div>
+                    </template>
+                </c-scroll>
+            </div>
+        </div>
+        <!-- 导入 -->
+        <el-dialog title="导入" :visible.sync="importShow" width="40%" :before-close="exportClose">
+            <div>
+                <el-input type="textarea" resize="none" :rows="12" placeholder="请输入内容" v-model="importText">
+                </el-input>
+            </div>
+            <span slot="footer">
+                <el-button size="mini" @click="importShow = false">取 消</el-button>
+                <el-button size="mini" type="primary" @click="importEvent">确 定</el-button>
+            </span>
+        </el-dialog>
+        <div class="features" v-if="features.state && modelId == 1" :style="featuresCss">
+            <div class="features-item" @click="addPoint">
+                添加
+            </div>
+            <div class="features-item" @click="delPoint(false)" v-if="features.isDel">
+                删除
+            </div>
+        </div>
+    </div>
+    <script src="./script/mange.js"></script>
+    <script src="./script/options.js"></script>
+    <script src="./script/components.js"></script>
+    <script src="./script/index.js"></script>
+    <script src="./script/effect.js"></script>
+</body>
+
+</html>

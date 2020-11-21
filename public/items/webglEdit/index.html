@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGl-Edit</title>
+
+    <script src="../../libs/jquery.js"></script>
+    <script src="../../libs/WebGL.js"></script>
+    <script src="../../libs/vue.min.js"></script>
+    <script src="../../libs/element.js"></script>
+    <script src="../../libs/three_r98.js"></script>
+    <script src="../../libs/OrbitControls.js"></script>
+    <script src="../../libs/dat.gui.min.js"></script>
+    <script src="../../libs/stats.min.js"></script>
+    <script src="../../libs/tween.js"></script>
+    <script src="./libs/perfect-scrollbar.min.js"></script>
+    <script src="./libs/libs_little.js"></script>
+
+    <script src="js/src/EffectEvents.js"></script>
+    <script src="js/src/EffectRender.js"></script>
+    <script src="js/src/EffectBase.js"></script>
+
+    <script src="js/src/CreateHandle.js"></script>
+
+    <link rel="stylesheet" href="../../libs/element.css">
+    <link rel="stylesheet" href="./style/reset.css">
+    <link rel="stylesheet" href="./style/perfect-scrollbar.css">
+    <link rel="stylesheet" href="./style/index.css">
+</head>
+
+<body>
+    <div class="full" id="app">
+        <div class="head">
+            <div class="head-list">
+                <div class="head-items">
+                    <span class="list-name">添加</span>
+                    <div class="list-item">
+                        <div @click="addEffect(item)" class="list-item-name" v-for="item in addList" :key="item.id">{{item.name}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 显示区域 -->
+        <div class="left">
+            <div class="full" id="webgl">
+
+            </div>
+        </div>
+        <!-- 控制区域 -->
+        <div class="right">
+            <!-- 控制区域 -->
+            <div class="t-model">
+                <c-scroll>
+                    <template v-slot:main>
+                        <div>
+                            <!-- 相机 -->
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">相机</div>
+                                <div class="t-item-box">
+                                    <div>
+                                        <el-select v-model="cameraVal" placeholder="选择相机" size="mini">
+                                            <el-option v-for="item in cameraOpts" :key="item.id" :label="item.name"
+                                                :value="item.id">
+                                            </el-option>
+                                        </el-select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </c-scroll>
+            </div>
+            <!-- 图层 -->
+            <div class="t-shows">
+                <c-scroll>
+                    <template v-slot:main>
+                        <div>
+
+                        </div>
+                    </template>
+                </c-scroll>
+            </div>
+        </div>
+    </div>
+    <script src="./script/options.js"></script>
+    <script src="./script/components.js"></script>
+    <script src="./script/index.js"></script>
+    <script src="./script/effect.js"></script>
+</body>
+
+</html>

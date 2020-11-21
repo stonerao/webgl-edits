@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title><%= title %></title>
+</head>
+
+<body>
+  <ul>
+    <% list.forEach(function(elem){ %>
+    <li><a href="/<%=elem.url %>/"><%=elem.name %></a></li>
+    <% })%>
+  </ul>
+</body>
+
+</html>

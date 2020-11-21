@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGl-Edit</title>
+
+    <script src="../../libs/jquery.js"></script>
+    <script src="../../libs/WebGL.js"></script>
+    <script src="../../libs/vue.min.js"></script>
+    <script src="../../libs/element.js"></script>
+    <script src="../../libs/three_r98.js"></script>
+    <script src="../../libs/OrbitControls.js"></script>
+    <script src="../../libs/dat.gui.min.js"></script>
+    <script src="../../libs/stats.min.js"></script>
+    <script src="../../libs/tween.js"></script>
+    <script src="./libs/perfect-scrollbar.min.js"></script>
+    <script src="./libs/libs_little.js"></script>
+
+    <script src="js/src/EffectEvents.js"></script>
+    <script src="js/src/EffectRender.js"></script>
+    <script src="js/src/EffectBase.js"></script>
+
+    <script src="js/src/CreateHandle.js"></script>
+
+    <link rel="stylesheet" href="../../libs/element.css">
+    <link rel="stylesheet" href="./style/reset.css">
+    <link rel="stylesheet" href="./style/perfect-scrollbar.css">
+    <link rel="stylesheet" href="./style/index.css">
+</head>
+
+<body>
+    <div class="full" id="app">
+        <div class="head">
+            <div class="head-list">
+                <!-- <div class="head-items">
+                    <span class="list-name">添加</span>
+                    <div class="list-item">
+                        <div @click="addEffect(item)" class="list-item-name" v-for="item in addList" :key="item.id">
+                            {{item.name}}</div>
+                    </div>
+                </div> -->
+                <div class="head-items">
+                    <span class="list-name" @click="exportEvent">导出</span> 
+                </div>
+                <div class="head-items">
+                    <span class="list-name" @click="importShow = true">导入</span> 
+                </div>
+                <div class="head-items">
+                    <span class="list-name" @click="msgShow = true">提示</span> 
+                </div>
+            </div>
+        </div>
+        <!-- 显示区域 -->
+        <div class="left">
+            <div class="full" id="webgl">
+
+            </div>
+        </div>
+        <!-- 控制区域 -->
+        <div class="right">
+            <!-- 控制区域 -->
+            <div class="t-model">
+                <c-scroll>
+                    <template v-slot:main>
+                        <div>
+                            <!-- 相机 -->
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">背景</div>
+                                <div class="t-item-box">
+                                    <el-button size="mini">
+                                        <label for="updateImg">背景图上传
+                                            <i class="el-icon-upload el-icon--right"></i>
+                                        </label>
+                                        <input @change="uploadBg" type="file" hidden id="updateImg"
+                                            accept="image/png, image/jpeg, image/gif, image/jpg">
+                                    </el-button>
+                                </div>
+                            </div>
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">材质</div>
+                                <div class="t-item-box">
+                                    <el-button size="mini">
+                                        <label for="updatePointImg">粒子默认图上传
+                                            <i class="el-icon-upload el-icon--right"></i>
+                                        </label>
+                                        <input @change="uploadPoint" type="file" hidden id="updatePointImg"
+                                            accept="image/png, image/jpeg, image/gif, image/jpg">
+                                    </el-button>
+                                </div>
+                            </div>
+                           <!--  <div class="t-camera t-items">
+                                <div class="t-items-title">模式</div>
+                                <div class="t-item-box">
+                                    <el-radio-group v-model="editModelId">
+                                        <el-radio v-for="item in editModels" :key="item.id" :label="item.id">
+                                            {{item.name}}</el-radio>
+                                    </el-radio-group>
+                                </div>
+                            </div> -->
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">样式</div>
+                                <div class="t-item-box">
+                                    <el-radio-group v-model="flyOpts.curve">
+                                        <el-radio :label="false">直线</el-radio>
+                                        <el-radio :label="true">曲线</el-radio>
+                                    </el-radio-group>
+                                </div>
+                            </div>
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">速度</div>
+                                <div class="t-item-box">
+                                    <el-input v-model="flyOpts.speed" placeholder="飞线速度" size="mini"></el-input>
+                                </div>
+                            </div>
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">大小</div>
+                                <div class="t-item-box">
+                                    <el-input v-model="flyOpts.size" placeholder="粒子大小" size="mini"></el-input>
+                                </div>
+                            </div>
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">密度</div>
+                                <div class="t-item-box">
+                                    <el-input v-model="flyOpts.dpi" placeholder="飞线密度" size="mini"></el-input>
+                                </div>
+                            </div>
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">长度</div>
+                                <div class="t-item-box">
+                                    <el-input v-model="flyOpts.length" placeholder="飞线长度" size="mini"></el-input>
+                                </div>
+                            </div>
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">颜色</div>
+                                <div class="t-item-box">
+                                    <el-input v-model="flyOpts.color" placeholder="飞线颜色" size="mini"></el-input>
+                                    <div class="t-tiem-colorshow" :style="{'background':flyOpts.color}"></div>
+                                </div>
+                            </div>
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">类型</div>
+                                <div class="t-item-box">
+                                    <el-select v-model="flyOpts.type" placeholder="飞线样式" size="mini">
+                                        <el-option v-for="item in flyTypes" :key="item.id" :label="item.name"
+                                            :value="item.id" size="mini">
+                                        </el-option>
+                                    </el-select>
+                                </div>
+                            </div>
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">操作</div>
+                                <div class="t-item-box">
+                                    <el-button size="mini" @click="restore">更改所有飞线</el-button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </template>
+                </c-scroll>
+            </div>
+            <!-- 图层 -->
+            <div class="t-shows">
+                <c-scroll>
+                    <template v-slot:main>
+                        <div>
+                            <ul class="layer-items">
+                                <li v-for="(item, index) in lineLayer" :key="item.uuid" class="layer-item">
+                                    <div class="layer-uuid" @click="showLine(item)">{{item.uuid}}</div>
+                                    <div class="layer-btn">
+                                        <el-button size="mini" @click="setFly(item)">修改</el-button>
+                                        <el-button size="mini" @click="setImg(item,`updateCImg${index}`)">图片
+                                        </el-button>
+                                        <el-button v-if="item.options.img" size="mini" @click="delCimg(item)">删除图片 </el-button>
+                                        <el-button size="mini" @click="delFly(item)">删除</el-button>
+                                    </div>
+                                    <input @change="uploadCimg" type="file" hidden :id="`updateCImg${index}`" accept="image/png, image/jpeg, image/gif, image/jpg">
+                                </li>
+                            </ul>
+                        </div>
+                    </template>
+                </c-scroll>
+            </div>
+
+            <!-- 导入 -->
+            <el-dialog title="导入" :visible.sync="importShow" width="40%" :before-close="exportClose">
+                <div>
+                    <el-input type="textarea" resize="none" :rows="12" placeholder="请输入内容" v-model="importText">
+                    </el-input>
+                </div>
+                <span slot="footer" class="dialog-footer">
+                    <el-button size="mini" @click="importShow = false">取 消</el-button>
+                    <el-button size="mini" type="primary" @click="importEvent">确 定</el-button>
+                </span>
+            </el-dialog>
+            <el-dialog title="提示" :visible.sync="msgShow" width="50%" :before-close="exportClose">
+                <div>
+                   <pre class="pre">
+如何使用：
+    第一步：右上角上传所需要的背景图
+    第二步：按住Ctrl+鼠标左边进行打点连线，松开即完成本次打点
+    第三步：调节所需要的光点样式，右侧提供粒子图、样式（曲线、直线）、速度、大小、密度、长度、颜色、飞线样式类型修改修改以后点击操作
+中的 更改所有飞线 为修改所以打点飞线样色，如果需要单个修改飞线样式，即鼠标移入当前飞线中，会显示一个 修改 按钮，点击即可修改单个飞线
+样式
+    图层功能介绍：
+        修改：读取上方配置，修改当前图层属性，为单一修改属性
+        图片：上传打个粒子图，修改当前，图片大小为2的n次方，如32*32，图片大小最好不要超过50kb
+        删除：删除当前飞线
+    第四步：点击导出，会下载一个zip压缩包，压缩包中有_init.js, FlyInitialize.js两个文件，
+    _init.js为代码编辑中的代码，把此段代码复制进去。修改代码容器ID。ID为需要展示的容器ID
+    FlyInitialize.js为展示的代码。选择上传即可（如果页面中多个飞线样式，上传一份即可）
+    容器大小在_init.js中，在9-12行提示。
+    
+    注： 导入功能为导入文件中 var data = []; data的变量。内容为中括号以及内容，如：[{},{},{}]
+                   </pre>
+
+                </div>
+                <span slot="footer" >
+                    <el-button size="mini" @click="msgShow = false">取 消</el-button>
+                    <el-button size="mini" type="primary" @click="msgShow = false">确 定</el-button>
+                </span>
+            </el-dialog>
+        </div>
+    </div>
+    <script src="./script/fly.js"></script>
+    <script src="./script/state.js"></script>
+    <script src="./script/options.js"></script>
+    <script src="./script/components.js"></script>
+    <script src="./script/index.js"></script>
+    <script src="./script/effect.js"></script>
+</body>
+
+</html>

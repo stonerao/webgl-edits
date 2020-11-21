@@ -1,0 +1,192 @@
+/** @format */
+@head-heihgt: 40px;
+@right-width: 300px;
+@border-color: #bfbfbf;
+
+.full {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+}
+.pre{
+    line-height: 24px;
+}
+.head {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: @head-heihgt - 1;
+    line-height: @head-heihgt - 5;
+    border-bottom: 1px solid @border-color;
+
+    .head-list {
+        position: relative;
+        display: inline-block;
+        font-size: 14px;
+        padding-left: 15px;
+    }
+
+    .list-name {
+        padding: 0 5px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.15s;
+        color: #444;
+
+        &:hover {
+            color: #ff0000;
+        }
+    }
+
+    .head-items {
+        display: inline-block;
+
+        &:hover {
+            .list-item {
+                display: block;
+            }
+        }
+    }
+
+    .list-item {
+        z-index: 1;
+        position: absolute;
+        min-width: 70px;
+        background: #fff;
+        border: 1px solid @border-color;
+        display: none;
+
+        .list-item-name {
+            line-height: 18px;
+            padding: 3px 6px;
+            transition: all 0.15s;
+            cursor: pointer;
+
+            &:hover {
+                color: #ff0000;
+            }
+        }
+    }
+}
+
+.left {
+    position: absolute;
+    left: 0;
+    right: @right-width;
+    top: @head-heihgt;
+    bottom: 0;
+}
+
+.t-items {
+    line-height: 24px;
+    padding: 2px 4px;
+    font-size: 14px;
+
+    >div {
+        vertical-align: text-top;
+    }
+
+    .t-items-title {
+        position: relative;
+        padding-right: 10px;
+        display: inline-block;
+        line-height: 28px;
+    }
+
+    .t-items-title::after {
+        content: "：";
+        position: absolute;
+        right: -5px;
+        top: 2px;
+        line-height: 24px;
+        display: inline-block;
+    }
+
+    .t-item-box {
+        display: inline-block;
+        position: relative;
+    }
+}
+
+.right {
+    position: absolute;
+    right: 0;
+    width: @right-width - 1;
+    top: @head-heihgt;
+    bottom: 0;
+    border-left: 1px solid @border-color;
+
+    .t-box {
+        width: 100%;
+        height: 50%;
+    }
+
+
+    .t-model {
+        top: 0;
+        position: absolute;
+        .t-box;
+    }
+
+    .t-shows {
+        bottom: 0;
+        position: absolute;
+        border-top: 1px solid @border-color;
+        .t-box;
+    }
+
+    .t-camera {}
+}
+
+.t-tiem-colorshow {
+    position: absolute;
+    vertical-align: middle;
+    width: 15px;
+    height: 15px;
+    top: 6px;
+    left: 155px;
+    background: #ff0000;
+    display: inline-block;
+    border: 1px solid #ededed;
+}
+
+.layer-items {
+    .layer-item {
+        font-size: 12px;
+        line-height: 24px;
+        text-indent: 5px;
+        color: #444;
+        transition: all .15s;
+        height: 24px;
+        overflow: hidden;
+
+        &:hover {
+            color: #ff0000;
+            height: 56px;
+
+            .layer-btn {
+                display: block;
+            }
+        }
+
+        >div {
+            cursor: pointer;
+        }
+    }
+
+    .layer-uuid {
+
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+    }
+
+    .layer-btn {
+        // width: 150px;
+        display: none;
+    }
+}
