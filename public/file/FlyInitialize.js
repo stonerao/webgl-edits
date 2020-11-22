@@ -187,7 +187,7 @@ var FlyInitialize = function () {
 		thm.planeArr=[];
 		thm.flyGroup = new THREE.Group();
 		thm.scene.add(thm.flyGroup);
-		thm.FLY = new InitFlys({
+		thm.Flys = new FlyInitFlys({
 			img: pointImg
 		})
 	}
@@ -257,13 +257,7 @@ var FlyInitialize = function () {
 
 				thm.flyGroup.add(g);
 
-			} else {
-				line.name = uuid;
-				line.renderOrder = 5;
-				line.position.y = 1;
-				// 点 
-
-
+			} else {   
 				const flyMesh = thm.Flys.add({
 					img: _pimg,
 					data: _data,
@@ -292,8 +286,8 @@ var FlyInitialize = function () {
 
 
 	function animation(dt) {
-		if (thm.FLY) {
-			thm.FLY.animation(dt);
+		if (thm.Flys) {
+			thm.Flys.animation(dt);
 		}
 		if (Array.isArray(thm.planeArr)){ 
 			thm.planeArr.forEach((elem) => {
@@ -513,7 +507,7 @@ var FlyInitialize = function () {
 * THREE = r98
 */
 
-class InitFlys {
+class FlyInitFlys {
 	constructor({ img } = opts) {
 		if (!THREE) {
 			return console.error("THREE! THREE! THREE!");
