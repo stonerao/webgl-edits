@@ -143,7 +143,7 @@ var FlyInitialize = function () {
 		df_Height = wh.h;
 		var cm = df_Config.camera,
 			bg = df_Config.background;
-		 
+
 		thm.camera = new THREE.OrthographicCamera(wh.w / - 2, wh.w / 2, wh.h / 2, wh.h / - 2, cm.near, cm.far);
 
 		thm.camera.position.set(cm.position[0], cm.position[1], cm.position[2]);
@@ -151,7 +151,7 @@ var FlyInitialize = function () {
 		thm.camera.zoom = df_Config.scale;
 
 		const s = df_Config.scale;
-		thm.scene.scale.set(s, s, s); 
+		thm.scene.scale.set(s, s, s);
 
 		thm.renderer = new THREE.WebGLRenderer({
 			antialias: true,
@@ -184,7 +184,7 @@ var FlyInitialize = function () {
 	}
 
 	function init3DMesh(opts) {
-		thm.planeArr=[];
+		thm.planeArr = [];
 		thm.flyGroup = new THREE.Group();
 		thm.scene.add(thm.flyGroup);
 		thm.Flys = new FlyInitFlys({
@@ -214,8 +214,8 @@ var FlyInitialize = function () {
 			if (options.curve) {
 				const curve = new THREE.CatmullRomCurve3(_data);
 				_data = curve.getPoints(_data.length * 10);
-			} 
-		 
+			}
+
 
 			if (ImgsType.includes(type)) {
 				const w = size * 2;
@@ -257,7 +257,7 @@ var FlyInitialize = function () {
 
 				thm.flyGroup.add(g);
 
-			} else {   
+			} else {
 				const flyMesh = thm.Flys.add({
 					img: _pimg,
 					data: _data,
@@ -289,24 +289,26 @@ var FlyInitialize = function () {
 		if (thm.Flys) {
 			thm.Flys.animation(dt);
 		}
-		if (Array.isArray(thm.planeArr)){ 
+		if (Array.isArray(thm.planeArr)) {
 			thm.planeArr.forEach((elem) => {
-			elem._time += dt * elem._speed;
-			const index = elem._index % (elem._totals.length - 1);
-			const nextI = elem._totals[index + 1];
+				elem._time += dt * elem._speed;
+				const index = elem._index % (elem._totals.length - 1);
+				const nextI = elem._totals[index + 1];
 
-			const curr = elem._data[index];
-			const next = elem._data[index + 1];
+				const curr = elem._data[index];
+				const next = elem._data[index + 1];
 
-			const p = curr.clone().lerp(next, elem._time / nextI);
-			elem.position.copy(p);
-			elem.lookAt(next);
-
-			if (elem._time >= nextI) {
-				elem._index++;
-				elem._time = 0;
-			};
-		})
+				if (next) {
+					const p = curr.clone().lerp(next, elem._time / nextI);
+					const n = curr.clone().lerp(next, elem._time / nextI + 0.1);
+					elem.position.copy(p);
+					elem.lookAt(n);
+					if (elem._time >= nextI) {
+						elem._index++;
+						elem._time = 0;
+					};
+				}
+			})
 		}
 	}
 	//-

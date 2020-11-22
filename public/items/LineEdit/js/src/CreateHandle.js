@@ -87,7 +87,7 @@ class HandleEffect extends EffectBase {
             });
             this.updateLine();
         }
-        this.rayArr = []; 
+        this.rayArr = [];
         this.helpLine.geometry.setFromPoints([]);
         this.lines.geometry.setFromPoints([]);
     }
@@ -97,10 +97,10 @@ class HandleEffect extends EffectBase {
     updateLine() {
         const { lines, pointImg } = StateManage.state;
         this.createLineGroup();
-        
+
         let thm = this;
-     
-        
+
+
         this.Flys.array = [];
 
         const ImgsType = [101];
@@ -121,11 +121,11 @@ class HandleEffect extends EffectBase {
                 _data = curve.getPoints(_data.length * 10);
             }
 
-            
+
             const material = thm.lineHelpMaterial.clone();
             const geometry = new THREE.BufferGeometry();
             geometry.setFromPoints(_data);
-            
+
             const line = new THREE.Line(geometry, material);
             thm.linesGroup.add(line);
 
@@ -325,15 +325,16 @@ class HandleEffect extends EffectBase {
 
             const curr = elem._data[index];
             const next = elem._data[index + 1];
-
-            const p = curr.clone().lerp(next, elem._time / nextI);
-            elem.position.copy(p);
-            elem.lookAt(next);
-
-            if (elem._time >= nextI) {
-                elem._index++;
-                elem._time = 0;
-            };
+            if (next) {
+                const p = curr.clone().lerp(next, elem._time / nextI);
+                const n = curr.clone().lerp(next, elem._time / nextI + 0.1);
+                elem.position.copy(p);
+                elem.lookAt(n);
+                if (elem._time >= nextI) {
+                    elem._index++;
+                    elem._time = 0;
+                }; 
+            }
         })
     }
 }
