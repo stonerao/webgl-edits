@@ -22,6 +22,7 @@ const VM = new Vue({
                 { name: "基础样式四", id: 4 },
                 { name: "基础样式五", id: 5 },
                 { name: "基础样式六", id: 6 },
+                { name: "基础样式七", id: 7 },
                 { name: "图片样式流动", id: 101 },
             ],
             lineLayer: [],

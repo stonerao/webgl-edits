@@ -52,7 +52,7 @@ class HandleEffect extends EffectBase {
         this.lines.renderOrder = 5;
 
         this.lineHelpMaterial = new THREE.LineBasicMaterial({
-            color: new THREE.Color("#ff0000"),
+            color: new THREE.Color("#8f8f8f"),
             // depthWrite: false,
             // depthTest: false,
             // transparent: true,
@@ -87,7 +87,7 @@ class HandleEffect extends EffectBase {
             });
             this.updateLine();
         }
-        this.rayArr = [];
+        this.rayArr = []; 
         this.helpLine.geometry.setFromPoints([]);
         this.lines.geometry.setFromPoints([]);
     }
@@ -96,10 +96,14 @@ class HandleEffect extends EffectBase {
     // 更新线条
     updateLine() {
         const { lines, pointImg } = StateManage.state;
+        this.createLineGroup();
+        
+        let thm = this;
+     
+        
+        this.Flys.array = [];
 
         const ImgsType = [101];
-        this.createLineGroup();
-        this.Flys.array = [];
         for (let i = 0; i < lines.length; i++) {
             const elem = lines[i];
             const { options, data, uuid } = elem;
@@ -117,54 +121,63 @@ class HandleEffect extends EffectBase {
                 _data = curve.getPoints(_data.length * 10);
             }
 
+            
+            const material = thm.lineHelpMaterial.clone();
+            const geometry = new THREE.BufferGeometry();
+            geometry.setFromPoints(_data);
+            
+            const line = new THREE.Line(geometry, material);
+            thm.linesGroup.add(line);
+
+
             if (ImgsType.includes(type)) {
                 const map = new THREE.TextureLoader().load(_pimg);
-                var geometry = new THREE.PlaneGeometry(size, size);
-                var material = new THREE.MeshBasicMaterial({
+                const w = size * 2;
+                const _geometry = new THREE.PlaneGeometry(w, w);
+                const _material = new THREE.MeshBasicMaterial({
                     side: THREE.DoubleSide,
                     transparent: true,
                     color: new THREE.Color(color),
                     map: map
                 });
-                var plane = new THREE.Mesh(geometry, material);
-                plane.renderOrder = 10;
-                plane._type = "plane";
-                plane._speed = speed;
+                const plane = new THREE.Mesh(_geometry, _material);
+
 
                 const totals = [];
                 totals[0] = 0;
                 for (let j = 1; j < _data.length; j++) {
                     totals[j] = _data[j - 1].distanceTo(_data[j]);
                 }
+                const g = new THREE.Group();
 
-                plane._data = _data;
-                plane._totals = totals;
-                plane._time = 0;
-                plane._index = 0;
+                g._data = _data;
+                g._totals = totals;
+                g._time = 0;
+                g._index = 0;
+                g._type = "plane";
+                g._speed = speed;
+                g.position.set(_data[0].x, _data[0].y, 1);
 
-                plane.position.set(_data[0].x, _data[0].y, 1)
-                // plane.position.y = 1;
+                g.add(plane);
+                g.lookAt(new THREE.Vector3(_data[1].x, _data[1].y, 1));
 
-                this.planeArr.push(plane);
-                this.flyGroup.add(plane);
+                plane.rotation.y = -Math.PI / 2;
+                plane.rotation.z = -Math.PI / 2;
+
+                plane.renderOrder = 10;
+
+                thm.planeArr.push(g);
+
+                thm.flyGroup.add(g);
 
             } else {
-                const material = this.lineHelpMaterial.clone();
-                const geometry = new THREE.BufferGeometry();
-
-                geometry.setFromPoints(_data);
-
-                const line = new THREE.Line(geometry, material);
-
                 line.name = uuid;
                 line.renderOrder = 5;
                 line.position.y = 1;
                 // 点 
 
-                this.linesGroup.add(line);
 
-
-                const flyMesh = this.Flys.add({
+                const flyMesh = thm.Flys.add({
                     img: _pimg,
                     data: _data,
                     speed,
@@ -184,7 +197,7 @@ class HandleEffect extends EffectBase {
                     }
                 });
                 flyMesh.name = elem.uuid;
-                this.flyGroup.add(flyMesh);
+                thm.flyGroup.add(flyMesh);
             }
         }
     }
@@ -204,10 +217,13 @@ class HandleEffect extends EffectBase {
         const lines = StateManage.state.lines;
         const notImg = lines.filter(elem => elem.options.img === null).map(elem => elem.uuid);
         const t = new THREE.TextureLoader().load(img);
-        this.flyGroup.children.forEach((elem) => {
+        this.flyGroup && this.flyGroup.children.forEach((elem) => {
             if (notImg.includes(elem.name)) {
                 elem.material.uniforms.u_map.value = t;
             }
+        })
+        this.planeArr && this.planeArr.forEach((elem) => {
+            elem.children[0] && (elem.children[0].material.map = t);
         })
     }
 
@@ -253,7 +269,6 @@ class HandleEffect extends EffectBase {
 
         // 
         this.config.renderers.updateEventArr(this);
-        console.log(this.config.renderers.camera)
     }
 
     // 添加效果 效果参数 
@@ -300,13 +315,25 @@ class HandleEffect extends EffectBase {
     onDblclick(e, intersects) {
         // console.log('--onDblclick--', e, intersects);
     }
+
     animate = (dt) => {
         this.Flys.animation(dt);
         this.planeArr.forEach((elem) => {
-            elem._time += dt;
-            
-            const curr = elem._time
+            elem._time += dt * elem._speed;
+            const index = elem._index % (elem._totals.length - 1);
+            const nextI = elem._totals[index + 1];
 
+            const curr = elem._data[index];
+            const next = elem._data[index + 1];
+
+            const p = curr.clone().lerp(next, elem._time / nextI);
+            elem.position.copy(p);
+            elem.lookAt(next);
+
+            if (elem._time >= nextI) {
+                elem._index++;
+                elem._time = 0;
+            };
         })
     }
 }

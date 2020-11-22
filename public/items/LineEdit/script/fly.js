@@ -271,6 +271,28 @@ class InitFlys {
             gl_FragColor = vec4(u_color, u_opacity * v_opacity) * _map;
              `
                 break;
+            case 7:
+                vertex = `
+            float size = u_size;
+            float index = mod(time, u_total); 
+            float PI = 3.1415926;
+            float t = 15.0;
+            if (a_index < index && a_index > index - u_length * t) {
+                v_opacity = 0.0; 
+                float m = mod(index - a_index, t);
+                if (m < 1.0) {
+                    float baisc = 1.0 - (index - a_index) / (u_length * t) + 1.0 / u_length;
+                    v_opacity = baisc + 0.1;
+                    size =( baisc * u_size * 0.6) + u_size* 0.6;
+                }
+            } else {
+                v_opacity = 0.0;
+            }`;
+                fragment = `
+            vec4 _map = texture2D(u_map, vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y));
+            gl_FragColor = vec4(u_color, u_opacity * v_opacity) * _map;
+             `
+                break;
             default:
         }
         const vertexShader = `uniform float time;

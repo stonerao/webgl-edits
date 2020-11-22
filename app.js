@@ -22,6 +22,9 @@ app.use(compress(options));
 const koaBody = require('koa-body');
 app.use(koaBody({
   multipart: true,
+  formLimit: "50mb",
+  jsonLimit: "50mb",
+  textLimit: "50mb",
   formidable: {
     maxFileSize: 1024 * 100 * 1024 * 1024    // 设置上传文件大小最大限制，默认1G
   }

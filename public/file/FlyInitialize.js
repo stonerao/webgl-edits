@@ -184,6 +184,7 @@ var FlyInitialize = function () {
 	}
 
 	function init3DMesh(opts) {
+		thm.planeArr=[];
 		thm.flyGroup = new THREE.Group();
 		thm.scene.add(thm.flyGroup);
 		thm.FLY = new InitFlys({
@@ -197,10 +198,15 @@ var FlyInitialize = function () {
 		const _pointImg = data.img;
 		const lines = data.data;
 
+		const ImgsType = [101];
 		for (let i = 0; i < lines.length; i++) {
 			const elem = lines[i];
 			const { options, data, uuid } = elem;
-			const geometry = new THREE.BufferGeometry();
+			const { img, speed, size, dpi, length, type, color } = options;
+
+			let _pimg = null;
+			if (_pointImg) _pimg = _pointImg;
+			if (img) _pimg = img;
 
 			let _data = data.map((d) => new THREE.Vector3(d.x, d.y, d.z));
 
@@ -208,36 +214,78 @@ var FlyInitialize = function () {
 			if (options.curve) {
 				const curve = new THREE.CatmullRomCurve3(_data);
 				_data = curve.getPoints(_data.length * 10);
-			}
+			} 
+		 
 
-			geometry.setFromPoints(_data);
-			// 点   
-			const { img, speed, dpi, length, type, color } = options;
-			const size = options.size * (df_Config.scale || 1);
-			let _pimg = null;
-			if (_pointImg) _pimg = _pointImg;
-			if (img) _pimg = img;
-			const flyMesh = thm.FLY.add({
-				img: _pimg,
-				data: _data,
-				speed,
-				size,
-				dpi,
-				length,
-				type,
-				color: new THREE.Color(color),
-				repeat: Infinity,
-				material: {
-					depthWrite: false,
-					blending: 2
-				},
-				onComplete: function () {
-				},
-				onRepeat(val) {
+			if (ImgsType.includes(type)) {
+				const w = size * 2;
+				const map = new THREE.TextureLoader().load(_pimg);
+				const _geometry = new THREE.PlaneGeometry(w, w);
+				const _material = new THREE.MeshBasicMaterial({
+					side: THREE.DoubleSide,
+					transparent: true,
+					color: new THREE.Color(color),
+					map: map
+				});
+				const plane = new THREE.Mesh(_geometry, _material);
+
+
+				const totals = [];
+				totals[0] = 0;
+				for (let j = 1; j < _data.length; j++) {
+					totals[j] = _data[j - 1].distanceTo(_data[j]);
 				}
-			});
-			flyMesh.name = elem.uuid;
-			thm.flyGroup.add(flyMesh);
+				const g = new THREE.Group();
+
+				g._data = _data;
+				g._totals = totals;
+				g._time = 0;
+				g._index = 0;
+				g._type = "plane";
+				g._speed = speed;
+				g.position.set(_data[0].x, _data[0].y, 1);
+
+				g.add(plane);
+				g.lookAt(new THREE.Vector3(_data[1].x, _data[1].y, 1));
+
+				plane.rotation.y = -Math.PI / 2;
+				plane.rotation.z = -Math.PI / 2;
+
+				plane.renderOrder = 10;
+
+				thm.planeArr.push(g);
+
+				thm.flyGroup.add(g);
+
+			} else {
+				line.name = uuid;
+				line.renderOrder = 5;
+				line.position.y = 1;
+				// 点 
+
+
+				const flyMesh = thm.Flys.add({
+					img: _pimg,
+					data: _data,
+					speed,
+					size,
+					dpi,
+					length,
+					type,
+					color: new THREE.Color(color),
+					repeat: Infinity,
+					material: {
+						depthWrite: false,
+						blending: 2
+					},
+					onComplete: function () {
+					},
+					onRepeat(val) {
+					}
+				});
+				flyMesh.name = elem.uuid;
+				thm.flyGroup.add(flyMesh);
+			}
 		}
 
 	}
@@ -246,6 +294,25 @@ var FlyInitialize = function () {
 	function animation(dt) {
 		if (thm.FLY) {
 			thm.FLY.animation(dt);
+		}
+		if (Array.isArray(thm.planeArr)){ 
+			thm.planeArr.forEach((elem) => {
+			elem._time += dt * elem._speed;
+			const index = elem._index % (elem._totals.length - 1);
+			const nextI = elem._totals[index + 1];
+
+			const curr = elem._data[index];
+			const next = elem._data[index + 1];
+
+			const p = curr.clone().lerp(next, elem._time / nextI);
+			elem.position.copy(p);
+			elem.lookAt(next);
+
+			if (elem._time >= nextI) {
+				elem._index++;
+				elem._time = 0;
+			};
+		})
 		}
 	}
 	//-
@@ -715,6 +782,28 @@ class InitFlys {
             gl_FragColor = vec4(u_color, u_opacity * v_opacity) * _map;
              `
 				break;
+			case 7:
+				vertex = `
+            float size = u_size;
+            float index = mod(time, u_total); 
+            float PI = 3.1415926;
+            float t = 15.0;
+            if (a_index < index && a_index > index - u_length * t) {
+                v_opacity = 0.0; 
+                float m = mod(index - a_index, t);
+                if (m < 1.0) {
+                    float baisc = 1.0 - (index - a_index) / (u_length * t) + 1.0 / u_length;
+                    v_opacity = baisc + 0.1;
+                    size =( baisc * u_size * 0.6) + u_size* 0.6;
+                }
+            } else {
+                v_opacity = 0.0;
+            }`;
+				fragment = `
+            vec4 _map = texture2D(u_map, vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y));
+            gl_FragColor = vec4(u_color, u_opacity * v_opacity) * _map;
+             `
+				break;
 			default:
 		}
 		const vertexShader = `uniform float time;
@@ -745,7 +834,7 @@ class InitFlys {
 			fragmentShader
 		}
 	}
-	
+
 }
 
 function InitControls() {
