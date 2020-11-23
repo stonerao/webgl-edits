@@ -38,13 +38,27 @@ const VM = new Vue({
                 state: false,
                 isDel: false
             },
-            editNameUuid: null
+            editNameUuid: null,
+            isKeyDown: false,
+            keyDownPoint: [],// 按下ctrl后点击的点
         }
     },
     mounted() {
         setTimeout(() => {
             console.log(Models)
         }, 1000);
+
+        window.addEventListener("keydown", (e) => {
+            if (e.keyCode == 17) {
+                this.isKeyDown = true;
+            }
+        })
+        window.addEventListener("keyup", (e) => {
+            this.isKeyDown = false;
+            if (this.keyDownPoint.length > 1) {
+                this.addLinkLine();
+            }
+        })
     },
     methods: {
         cameraAdd() {
@@ -67,7 +81,6 @@ const VM = new Vue({
                 name: "camera" + (this.layers.length + 1)
             });
             this.currData = [];
-
             // 清空
             Cameras.dispose();
         },
@@ -96,6 +109,9 @@ const VM = new Vue({
         exportEvent() {
             download("data.json", JSON.stringify(this.layers))
         },
+        exportEventLine() {
+            download("data.json", JSON.stringify(this.layers.filter(e => e.type == 'line')));
+        },
         // 修改
         editItem(item) {
             // 清空
@@ -114,6 +130,10 @@ const VM = new Vue({
                 this.delPoint(item.uuid);
             }
             this.layers.splice(index, 1);
+
+            if (item.type == "line") {
+                this.updateLine();
+            }
         },
         exportClose() {
             this.$confirm('确认关闭？')
@@ -132,6 +152,8 @@ const VM = new Vue({
                         const elem = data[i];
                         if (elem.type === "point") {
                             Points.addPoint(elem.data, elem.uuid);
+                        } else if (elem.type === "line") {
+                            this.updateLine();
                         }
                     }
                 }
@@ -153,6 +175,36 @@ const VM = new Vue({
 
             Points.addPoint(intersect.point, uuid);
         },
+        // 添加连线
+        addLinkLine() {
+            const line = this.keyDownPoint.map((point) => {
+                return point;
+            });
+            const uuid = THREE.Math.generateUUID();
+            this.layers.push({
+                uuid: uuid,
+                data: line,
+                type: "line",
+                name: "line" + (this.layers.length + 1)
+            });
+
+            this.updateLine();
+
+            Points.updateActiveLine([]);
+            this.keyDownPoint = [];
+        },
+        // 更新线条数据
+        updateLine() {
+            const lines = this.layers
+                .filter((layer) => layer.type === "line")
+                .map((layer) => layer.data);
+            Points.updateLine(lines);
+        },
+        // 按下ctrl选中节点
+        selectNodes(e, intersect) {
+            this.keyDownPoint.push(intersect.object.position.clone());
+            Points.updateActiveLine(this.keyDownPoint);
+        },
         featuresEvent(e, intersect) {
             this.featuresCss = {
                 left: e.x + "px",
@@ -163,6 +215,8 @@ const VM = new Vue({
             clearOut = setTimeout(() => {
                 this.features.state = false;
             }, 2000);
+
+            // 
         },
         delPoint(uuid) {
             let isUpdateLayer = false;
@@ -184,15 +238,15 @@ const VM = new Vue({
             const f = target.files[0];
             if (!f) return false;
             var dataURL = URL.createObjectURL(f)
-            Models.loadModel([dataURL])
+            Models.loadModel([dataURL]);
 
         },
         setItemName(item) {
-            this.editNameUuid = item. uuid;
-        } ,
+            this.editNameUuid = item.uuid;
+        },
         selectPoint(item) {
             Points.showPoint(item.uuid);
-        } 
+        }
     },
     components: {
         "c-scroll": scrollCom,

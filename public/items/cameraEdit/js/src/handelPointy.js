@@ -18,12 +18,51 @@ class handelPointy extends EffectBase {
             color: 0xff8888,
             depthWrite: false
         });
+
+        this.nodeGeo = new THREE.BoxGeometry(1, 1, 1);
+
+        // 连线
+        const lineMaterial = new THREE.LineBasicMaterial({
+            color: 0xffffff,
+        });
+        const lineActiveMaterial = new THREE.LineBasicMaterial({
+            color: 0xff0000,
+        });
+
+        const lineGeo = new THREE.BufferGeometry();
+        const lineActiveGeo = new THREE.BufferGeometry();
+
+        this.line = new THREE.LineSegments(lineGeo, lineMaterial);
+        this.lineActive = new THREE.LineSegments(lineActiveGeo, lineActiveMaterial);
+        this.group.add(this.line, this.lineActive)
+    }
+
+    updateLine(data) {
+        const points = [];
+        data.forEach((elem) => {
+            for (let i = 0; i < elem.length - 1; i++) {
+                const curr = (new THREE.Vector3()).copy(elem[i]);
+                const next = (new THREE.Vector3()).copy(elem[i + 1])
+                points.push(curr, next);
+            }
+        });
+        this.line.geometry.setFromPoints(points);
+    }
+
+    updateActiveLine(data) {
+        const points = [];
+        for (let i = 0; i < data.length - 1; i++) {
+            const curr = (new THREE.Vector3()).copy(data[i]);
+            const next = (new THREE.Vector3()).copy(data[i + 1])
+            points.push(curr, next);
+        }
+        this.lineActive.geometry.setFromPoints(points);
     }
 
     addPoint(position, id) {
-        var geometry = new THREE.CylinderBufferGeometry(1, 1, 5, 9, 1);
 
-        var cube = new THREE.Mesh(geometry, this.basicMaterial);
+
+        var cube = new THREE.Mesh(this.nodeGeo, this.basicMaterial);
         cube._isPoint = true;
         this.group.add(cube);
         this.eventArray.push(cube);
@@ -34,7 +73,6 @@ class handelPointy extends EffectBase {
     }
     delPoint(uuid) {
         const children = this.group.children;
-
         for (let i = children.length - 1; i >= 0; i--) {
             const elem = children[i];
             if (elem.name == uuid) {
@@ -52,8 +90,8 @@ class handelPointy extends EffectBase {
             const elem = children[i];
             if (elem.name == uuid) {
                 elem.material = this.activeMaterial;
-                
-            }else {
+
+            } else {
                 elem.material = this.basicMaterial;
             }
         };
@@ -66,7 +104,6 @@ class handelPointy extends EffectBase {
         // console.log('--onMouseOut--', e, intersects, key);
     }
     onMouseDown(e, intersects) {
-
         if (e.button === 2 && intersects.length != 0 && intersects[0].object._isPoint) {
             VM.features.isDel = true;
             store.setState({
@@ -74,6 +111,9 @@ class handelPointy extends EffectBase {
             });
             VM.featuresEvent(e, intersects[0])
         } else {
+            if (e.button === 0 && intersects[0].object._isPoint) {
+                VM.selectNodes(e, intersects[0]);
+            }
             VM.features.state = false;
         }
     }
