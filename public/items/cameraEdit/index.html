@@ -24,7 +24,7 @@
     <script src="js/src/EffectEvents.js"></script>
     <script src="js/src/EffectRender.js"></script>
     <script src="js/src/EffectBase.js"></script>
-
+ 
     <script src="js/src/handelModel.js"></script>
     <script src="js/src/handelCamera.js"></script>
     <script src="js/src/handelPointy.js"></script>
@@ -44,6 +44,7 @@
                     <span class="list-name" @click="exportEventLine">导出线条</span>
                     <span class="list-name" @click="importShow = true">导入</span>
                     <span class="list-name"><label for="exportModel">添加模型</label></span>
+                    <!-- <span class="list-name" @click="clearData">清空数据</span> -->
                     <input type="file" accept=".fbx" @change="exportModel" id="exportModel" hidden>
                 </div>
             </div>
@@ -119,6 +120,15 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- 场景 -->
+                            <div class="t-camera t-items">
+                                <div class="t-items-title">点位大小</div>
+                                <div class="t-item-box">
+                                    <div class="t-item-inputs">
+                                        <el-input size="mini" v-model="pointSzie"  @change="pointChange"  placeholder="偏移X"></el-input>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </template>
                 </c-scroll>
@@ -174,6 +184,7 @@
     <script src="./script/components.js"></script>
     <script src="./script/index.js"></script>
     <script src="./script/effect.js"></script>
+   
 </body>
 
 </html>

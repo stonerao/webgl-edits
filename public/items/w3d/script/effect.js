@@ -6,10 +6,12 @@ var renderers = new EffectRender({
     background: {
         color: '#ffffff', opacity: 0, type: 'cubSky' // type: shpereSky-天空球,cubSky-天空盒
     },
+    camera: {
+        fov: 45, near: 8, far: 30000, position: [0, 556, 328], ratio: 1
+    },
     texture: {
         txuePath: './images/', //路径
         background: { //背景
-            shpereSky: 'test.jpg',
             cubSky: { // 天空盒
                 px: 'cubSky/px.jpg',
                 nx: 'cubSky/nx.jpg',
@@ -35,32 +37,39 @@ var renderers = new EffectRender({
         antialiasLevel: 1, // ssaa 抗锯齿级别
     }
 });
-console.log(renderers)
 
+// 物体位置旋转控制器
+var Transforms = new Transform({
+
+});
+
+
+// 模型控制
 var Models = new handelModel({
     renderers,
     modelUrl: './model/',
     model: [
-        // 'car2.FBX'
-        /* "A.FBX",
-        "B.FBX",
-        "C.FBX", */
-        // "D.FBX",
-        // "Land.FBX"
+        // "jiaotong01.FBX"
     ]
 });
-var Cameras = new handelCamera({
+// 效果
+var Effect = new handelEffect({
+    renderers,
+    modelUrl: './model/',
+    model: [
+        // "land.FBX"
+    ]
+});
+var Parse = new handelParse({
+     
+});
 
-});
-// 点
-var Points = new handelPointy({
-    renderers,
-});
-var Points = new handelPointy({
-    renderers,
-});
+renderers.addEffect(Effect);
+renderers.addEffect(Models);
+renderers.addEffect(Parse);
+renderers.addEffect(Transforms);
+
+Contact.updateTree();
+
 
 window.scene = renderers.scene;
-renderers.addEffect(Models);
-renderers.addEffect(Cameras);
-renderers.addEffect(Points);

@@ -41,6 +41,7 @@ const VM = new Vue({
             editNameUuid: null,
             isKeyDown: false,
             keyDownPoint: [],// 按下ctrl后点击的点
+            pointSzie:1
         }
     },
     mounted() {
@@ -141,6 +142,10 @@ const VM = new Vue({
                     done();
                 })
                 .catch(_ => { });
+        },
+        clearData() {
+            this.importText="[]";
+            this.importEvent();
         },
         importEvent() {
             try {
@@ -246,6 +251,12 @@ const VM = new Vue({
         },
         selectPoint(item) {
             Points.showPoint(item.uuid);
+        },
+        pointChange() {
+            if (this.pointSzie) {
+                const val = parseFloat(this.pointSzie);
+                Points.setPointSize(val);
+            }
         }
     },
     components: {

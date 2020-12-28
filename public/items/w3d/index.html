@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W3D编辑器</title>
+
+    <script src="../../libs/jquery.js"></script>
+    <script src="../../libs/WebGL.js"></script>
+    <script src="../../libs/vue.min.js"></script>
+    <script src="../../libs/element.js"></script>
+    <script src="../../libs/three_r98.js"></script>
+    <script src="../../libs/OrbitControls.js"></script>
+    <script src="../../libs/FBXLoader.js"></script>
+    <script src="../../libs/DragControls.js"></script>
+    <script src="../../libs/TransformControls.js"></script>
+    <script src="../../libs/dat.gui.min.js"></script>
+    <script src="../../libs/stats.min.js"></script>
+    <script src="../../libs/tween.js"></script>
+    <script src="./libs/perfect-scrollbar.min.js"></script>
+    <script src="./libs/libs_little.js"></script>
+
+    <script src="./script/utils.js"></script>
+    <script src="./script/contact.js"></script>
+    <script src="script/effectCompomemts.js"></script>
+    <script src="js/src/EffectEvents.js"></script>
+    <script src="js/src/EffectRender.js"></script>
+    <script src="js/src/EffectBase.js"></script>
+<!-- effect -->
+    <script src="js/effect/CreatBlitzball.js"></script>
+
+    <script src="js/src/Transform.js"></script>
+    <script src="js/src/handelModel.js"></script>
+    <script src="js/src/handelEffect.js"></script>
+    <script src="js/src/handelParse.js"></script>
+
+    <link rel="stylesheet" href="../../libs/element.css">
+    <link rel="stylesheet" href="./style/reset.css">
+    <link rel="stylesheet" href="./style/perfect-scrollbar.css">
+    <link rel="stylesheet" href="./style/index.css">
+</head>
+
+<body>
+    <div class="full" id="app">
+        <div class="head">
+            <div class="head-list">
+                <div class="head-items">
+                    <span class="list-name" @click="exportEvent">导出</span>
+                    <span class="list-name" @click="importShow = true">导入</span>
+                    <span class="list-name"><label for="exportModel">添加模型</label></span>
+                    <input type="file" accept=".fbx" @change="exportModel" id="exportModel" hidden>
+                </div>
+            </div>
+        </div>
+        <!-- 显示区域 -->
+        <div class="left">
+            <div class="full" id="webgl" v-on:drop="drop($event)" @dragover="allowDrop($event)">
+
+            </div>
+            <div class="edit-ben">
+
+            </div>
+        </div>
+        <!-- 控制区域 -->
+        <div class="right">
+            <!-- 控制区域 -->
+            <div class="t-model">
+                <ul class="t-show-head">
+                    <li @click="ctrlType = 1">场景</li>
+                    <li @click="ctrlType = 2">组件库</li>
+                    <li @click="ctrlType = 3">效果库</li>
+                </ul>
+                <div class="t-show-item" v-if="ctrlType == 1">
+                    <c-scroll>
+                        <template v-slot:main>
+                            <div>
+                                <c-tree v-for="item in treeData" :items="item"></c-tree>
+                                <!-- 相机 -->
+                                <div class="t-items" v-if="false">
+                                    <div class="t-items-title">灯光</div>
+                                    <div class="t-item-box">
+                                        <div>
+                                            <el-button size="mini" @click="lightShow = true">编辑</el-button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </c-scroll>
+                </div>
+                <div class="t-show-item" v-if="ctrlType == 2">
+                    <c-scroll>
+                        <template v-slot:main>
+                            <div>
+                                <div class="effectCom-items" v-for="item in effectComs.comments" :key="item.id"
+                                    draggable="true" @dragstart="drag(event, item)" @click="EffectComEvent(item)">
+                                    <div class="effectCom-items-box"></div>
+                                    <div class="effectCom-items-name">{{item.name}}</div>
+                                </div>
+                            </div>
+                        </template>
+                    </c-scroll>
+
+                </div>
+                <div class="t-show-item" v-if="ctrlType == 3">
+                    <c-scroll>
+                        <template v-slot:main>
+                            <div>
+                                <div class="effectCom-items" v-for="item in effectComs.effect" :key="item.id" 
+                                  @click="EffectEffectvent(item)">
+                                    <div class="effectCom-items-box"></div>
+                                    <div class="effectCom-items-name">{{item.name}}</div>
+                                </div>
+                            </div>
+                        </template>
+                    </c-scroll>
+
+                </div>
+
+            </div>
+            <!-- 图层 -->
+            <div class="t-shows">
+                <ul class="t-show-head">
+                    <li @click="layerType = 1">基础</li>
+                    <li @click="layerType = 2">geometry</li>
+                    <li @click="layerType = 3">material</li>
+                </ul>
+                <div class="t-show-item" v-if="layerType == 1"></div>
+                <div class="t-show-item" v-if="layerType == 2"></div>
+                <div class="t-show-item" v-if="layerType == 3">
+                    <c-scroll>
+                        <template v-slot:main>
+                            <div>
+                                <ul class="layer-items">
+                                    <li class="layer-item" v-for="(item, i) in materials" :key="i">
+                                        <div class="layer-item-name">
+                                            <span v-if="item.mName">{{item.mName}}</span>
+                                            <span v-if="item.mName">{{item.name}}</span>
+                                        </div>
+                                        <div>
+                                            <div class="layer-item-list">
+                                                <div>color：</div>
+                                                <div class="f-1">
+                                                    <el-color-picker v-model="item.color" size="mini"
+                                                        @change="updateMaterialVal">
+                                                    </el-color-picker>
+                                                </div>
+                                            </div>
+                                            <div class="layer-item-list">
+                                                <div>opacity：</div>
+                                                <div class="f-1">
+                                                    <el-input size="mini" v-model="item.opacity" placeholder="请输入内容"
+                                                        @change="updateMaterialVal"></el-input>
+                                                </div>
+                                            </div>
+                                            <div class="layer-item-list">
+                                                <div>side：</div>
+                                                <div class="f-1">
+                                                    <el-select size="mini" v-model="item.side" placeholder="请选择"
+                                                        @change="updateMaterialVal">
+                                                        <el-option label="FrontSide" :value="0"></el-option>
+                                                        <el-option label="BackSide" :value="1"></el-option>
+                                                        <el-option label="DoubleSide" :value="2"></el-option>
+                                                    </el-select>
+                                                </div>
+                                            </div>
+                                            <div class="layer-item-list">
+                                                <div>blending：</div>
+                                                <div class="f-1">
+                                                    <el-select size="mini" v-model="item.side" placeholder="请选择"
+                                                        @change="updateMaterialVal">
+                                                        <el-option label="NoBlending" :value="0"></el-option>
+                                                        <el-option label="NormalBlending" :value="1"></el-option>
+                                                        <el-option label="AdditiveBlending" :value="2"></el-option>
+                                                        <el-option label="SubtractiveBlending" :value="3"></el-option>
+                                                        <el-option label="MultiplyBlending" :value="4"></el-option>
+                                                        <el-option label="CustomBlending" :value="5"></el-option>
+                                                    </el-select>
+                                                </div>
+                                            </div>
+                                            <div class="layer-item-list">
+                                                <div>wireframe：</div>
+                                                <div class="f-1">
+                                                    <el-switch v-model="item.wireframe" active-color="#13ce66"
+                                                        inactive-color="#888888" @change="updateMaterialVal">
+                                                    </el-switch>
+                                                </div>
+                                            </div>
+
+                                            <div class="layer-item-list">
+                                                <div>depthWrite：</div>
+                                                <div class="f-1">
+                                                    <el-switch v-model="item.depthWrite" active-color="#13ce66"
+                                                        inactive-color="#888888" @change="updateMaterialVal">
+                                                    </el-switch>
+                                                </div>
+                                            </div>
+                                            <div class="layer-item-list">
+                                                <div>depthTest：</div>
+                                                <div class="f-1">
+                                                    <el-switch v-model="item.depthTest" active-color="#13ce66"
+                                                        inactive-color="#888888" @change="updateMaterialVal">
+                                                    </el-switch>
+                                                </div>
+                                            </div>
+                                            <div class="layer-item-list">
+                                                <div>transparent：</div>
+                                                <div class="f-1">
+                                                    <el-switch v-model="item.transparent" active-color="#13ce66"
+                                                        inactive-color="#888888" @change="updateMaterialVal">
+                                                    </el-switch>
+                                                </div>
+                                            </div>
+                                            <div class="layer-item-list">
+                                                <div>visible：</div>
+                                                <div class="f-1">
+                                                    <el-switch v-model="item.visible" active-color="#13ce66"
+                                                        inactive-color="#888888" @change="updateMaterialVal">
+                                                    </el-switch>
+                                                </div>
+                                            </div>
+                                            <div class="layer-item-list" v-for="uv in item.uvs" :key="uv">
+                                                <div>{{uv}}：</div>
+                                                <div class="f-1">
+
+                                                    <label :for="`update${uv}`" class="uploadUvImg">上传</label>
+
+                                                    <input type="file" name="" :id="`update${uv}`"
+                                                        @change="uploadUvTexture($event, uv)" hidden
+                                                        accept="image/png, image/jpeg, image/gif, image/jpg">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </template>
+                    </c-scroll>
+                </div>
+            </div>
+        </div>
+        <!-- 导入 -->
+        <el-dialog title="导入" :visible.sync="importShow" width="40%" :before-close="exportClose">
+            <div>
+                <el-input type="textarea" resize="none" :rows="12" placeholder="请输入内容" v-model="importText">
+                </el-input>
+            </div>
+            <span slot="footer">
+                <el-button size="mini" @click="importShow = false">取 消</el-button>
+                <el-button size="mini" type="primary" @click="importEvent">确 定</el-button>
+            </span>
+        </el-dialog>
+
+        <el-dialog title="灯光" :visible.sync="lightShow" width="60%" :before-close="exportClose">
+            <div>
+                <div>
+                    <div>环境光</div>
+                    <el-row :gutter="20">
+                        <el-col :span="10">
+                            <span>颜色（color）</span>
+                            <el-color-picker v-model="light.Ambient.color" show-alpha size="mini"></el-color-picker>
+                        </el-col>
+                        <el-col :span="10">
+                            <span>光照强度（color）</span>
+                            <el-input v-model="light.Ambient.strength" placeholder="请输入内容"></el-input>
+                        </el-col>
+                    </el-row>
+                </div>
+            </div>
+            <span slot="footer">
+                <el-button size="mini" @click="lightShow = false">取 消</el-button>
+                <el-button size="mini" type="primary" @click="lightShow = false">确 定</el-button>
+            </span>
+        </el-dialog>
+    </div>
+    <script src="./script/mange.js"></script>
+    <script src="./script/options.js"></script>
+    <script src="./script/components.js"></script>
+    <script src="./script/index.js"></script>
+    <script src="./script/effect.js"></script>
+</body>
+
+</html>

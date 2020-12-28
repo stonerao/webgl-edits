@@ -5,8 +5,10 @@ class handelPointy extends EffectBase {
 
         this.group = new THREE.Group();
 
-
+        this.dfSize = 1;
         this.init();
+
+        this.timeOut = null;
     }
 
     init() {
@@ -24,9 +26,11 @@ class handelPointy extends EffectBase {
         // 连线
         const lineMaterial = new THREE.LineBasicMaterial({
             color: 0xffffff,
+            depthTest: false
         });
         const lineActiveMaterial = new THREE.LineBasicMaterial({
             color: 0xff0000,
+            depthTest: false
         });
 
         const lineGeo = new THREE.BufferGeometry();
@@ -35,6 +39,9 @@ class handelPointy extends EffectBase {
         this.line = new THREE.LineSegments(lineGeo, lineMaterial);
         this.lineActive = new THREE.LineSegments(lineActiveGeo, lineActiveMaterial);
         this.group.add(this.line, this.lineActive)
+
+        this.line.renderOrder = 50;
+        this.lineActive.renderOrder = 50;
     }
 
     updateLine(data) {
@@ -60,15 +67,14 @@ class handelPointy extends EffectBase {
     }
 
     addPoint(position, id) {
-
-
         var cube = new THREE.Mesh(this.nodeGeo, this.basicMaterial);
         cube._isPoint = true;
         this.group.add(cube);
         this.eventArray.push(cube);
         cube.position.copy(position);
-        cube.position.y += 2.5;
+        cube.position.y += this.dfSize / 2;
         cube.name = id;
+        cube.scale.set(this.dfSize, this.dfSize, this.dfSize);
         this.config.renderers.updateEventArr(this);
     }
     delPoint(uuid) {
@@ -83,6 +89,13 @@ class handelPointy extends EffectBase {
 
         this.eventArray = this.eventArray.filter(elem => elem.name != uuid);
         this.config.renderers.updateEventArr(this);
+    }
+    setPointSize(size) {
+        this.dfSize = size;
+        this.eventArray.forEach((child) => {
+            child.position.y = size / 2;
+            child.scale.set(size, size, size);
+        })
     }
     showPoint(uuid) {
         const children = this.group.children;
@@ -99,10 +112,21 @@ class handelPointy extends EffectBase {
 
     onMouseIn(e, intersects) {
         // console.log('--onMouseIn--', e, intersects);
+        clearTimeout(this.timeOut);
+        if (intersects.length != 0 && intersects[0].object._isPoint) {
+
+            renderers.renderer.domElement.style.cursor = "pointer"
+        }
+        this.timeOut = setTimeout(() => {
+            renderers.renderer.domElement.style.cursor = "default"
+        }, 1000);
+
     }
     onMouseOut(e, intersects, key) {
         // console.log('--onMouseOut--', e, intersects, key);
+
     }
+
     onMouseDown(e, intersects) {
         if (e.button === 2 && intersects.length != 0 && intersects[0].object._isPoint) {
             VM.features.isDel = true;

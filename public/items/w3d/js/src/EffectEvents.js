@@ -29,9 +29,10 @@ function EffectEvents(render) {
 
         if (_this._Intersects.length) {
             const obj0 = _this._Intersects[0].object;
+            console.log(obj0)
             if (obj0 !== _this._ItdMesh) {
                 _this.setMouseOut(event, false); // 移出清空
-                _this.setMouseIn(event, obj0); // - 移入 - 只执行一次
+                // _this.setMouseIn(event, obj0); // - 移入 - 只执行一次
             }
             _this.setMouseIn(event, obj0); // - 移入 - 一直执行
         } else {
@@ -59,15 +60,15 @@ function EffectEvents(render) {
         _this.setMouseDown(event, 'onDblclick');
     }
 
-    this.eventDom.addEventListener('mouseout', onDocumentMouseOut, false);
-    this.eventDom.addEventListener('mousemove', onDocumentMouseMove, false);
+    // this.eventDom.addEventListener('mouseout', onDocumentMouseOut, false);
+    // this.eventDom.addEventListener('mousemove', onDocumentMouseMove, false);
     this.eventDom.addEventListener('mousedown', onDocumentMouseDown, false);
     this.eventDom.addEventListener('dblclick', onDocumentMousedblclick, false);
 
     // 移除事件绑定
-    this.removeEvents = function () {
-        this.eventDom.removeEventListener('mouseout', onDocumentMouseOut, false);
-        this.eventDom.removeEventListener('mousemove', onDocumentMouseMove, false);
+    this.removeEvents = function() {
+        // this.eventDom.removeEventListener('mouseout', onDocumentMouseOut, false);
+        // this.eventDom.removeEventListener('mousemove', onDocumentMouseMove, false);
         this.eventDom.removeEventListener('mousedown', onDocumentMouseDown, false);
         this.eventDom.removeEventListener('dblclick', onDocumentMousedblclick, false);
     };
@@ -78,7 +79,7 @@ Object.assign(EffectEvents.prototype, {
     constructor: EffectEvents,
 
     // 销毁事件， key = true -- 只清空拾取
-    disposeEvent: function (key) {
+    disposeEvent: function(key) {
         this._ItdMesh = null;
         if (key) return;
 
@@ -95,7 +96,7 @@ Object.assign(EffectEvents.prototype, {
 
     // ---------------
     // 事件分发执行
-    handoutEvent: function (event, component, eventName, hasCallBack) {
+    handoutEvent: function(event, component, eventName, hasCallBack) {
         if (!component) return;
         const eventFunc = component[eventName];
         if (this.GLRender.isFunction(eventFunc)) {
@@ -106,10 +107,10 @@ Object.assign(EffectEvents.prototype, {
         }
     },
     // 获取拾取对象
-    getIntersects: function (event) {
+    getIntersects: function(event) {
         this._Mouse.x = (event.layerX / this.GLRender.width) * 2 - 1;
         this._Mouse.y = -(event.layerY / this.GLRender.height) * 2 + 1;
-
+        
         if (this.GLRender.threshold) { // - 设置射线拾取阀值，决定拾取精度
             this._Raycaster.params.Points.threshold = this.GLRender.threshold;
         }
@@ -125,9 +126,10 @@ Object.assign(EffectEvents.prototype, {
         if (this._Intersects.length) {
             this._CurrentID = this._Intersects[0].object.userData.eId;
         }
+        return this._Intersects;
     },
     // 鼠标移出执行
-    setMouseOut: function (event, hasCallBack) {
+    setMouseOut: function(event, hasCallBack) {
         const component = this.GLRender.effectObj[this._CurrentID];
         if (hasCallBack && this.eventDom) this.eventDom.style.cursor = 'auto';
         if (this._ItdMesh) {
@@ -137,7 +139,7 @@ Object.assign(EffectEvents.prototype, {
         this._ItdMesh = null;
     },
     // 鼠标移入执行
-    setMouseIn: function (event, obj) {
+    setMouseIn: function(event, obj) {
         this._ItdMesh = obj; // 保留缓存，用于判断是否是相同拾取
         this.eventDom.style.cursor = 'pointer';
         const component = this.GLRender.effectObj[this._CurrentID];
@@ -145,7 +147,7 @@ Object.assign(EffectEvents.prototype, {
         this.handoutEvent(event, component, 'onMouseIn');
     },
     // 鼠标点击执行（单击/双击）
-    setMouseDown: function (event, eventName) {
+    setMouseDown: function(event, eventName) {
         const component = this.GLRender.effectObj[this._CurrentID];
         this.GLRender[eventName](event, component, this._Intersects);
         this.handoutEvent(event, component, eventName);
